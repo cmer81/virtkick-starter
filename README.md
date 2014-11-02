@@ -18,18 +18,27 @@ This is a heavy work in progress and not yet one-click install. Don't judge - it
 Most things are already handled by `virtkick-start`, you only need Git.
 ```
 sudo apt-get install git
+git clone https://github.com/virtkick/virtkick-starter.git
+cd virtkick-starter
+./virtkick-start -dim
+```
+Next runs:
+```
+./virtkick-start -dim
 ```
 ### CentOS 6.5
 First of all you need git
 ```
 sudo yum install git
-```
-
-After repo is cloned, invoke
-```
+git clone https://github.com/virtkick/virtkick-starter.git
+cd virtkick-starter
 sudo ./setup/distro/centos65.sh
+./virtkick-start -dim
 ```
-Now below first run instructions should succeed.
+Next runs:
+```
+./virtkick-start -dim
+```
 
 ### Other
 
