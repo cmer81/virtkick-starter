@@ -19,7 +19,8 @@ Host localhost
     fi
   '
 
-  export SSH_PORT=$(sudo grep -oE "^\s*Port\s+[0-9]+" /etc/ssh/sshd_config|grep -oE "[0-9]+")
+  # this makes no attempt to decide which port to use if multiple ports specified. so pick the first one.
+  export SSH_PORT=$(sudo grep -oE "^\s*Port\s+[0-9]+" /etc/ssh/sshd_config|grep -oE "[0-9]+"|head -n 1)
   if [ "$SSH_PORT" == "" ];then
     export SSH_PORT="22"
   fi
