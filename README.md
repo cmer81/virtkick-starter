@@ -3,6 +3,7 @@
 [![GPA](https://img.shields.io/codeclimate/github/virtkick/virtkick-starter.svg?style=flat-square)](https://codeclimate.com/github/virtkick/virtkick-starter)
 [![Dependencies status](http://img.shields.io/gemnasium/virtkick/virtkick-starter.svg?style=flat-square)](https://gemnasium.com/virtkick/virtkick-starter)
 [![Gratipay](https://img.shields.io/gratipay/virtkick.svg?style=flat-square)](https://gratipay.com/virtkick/)
+[![Install on DigitalOcean](http://installer.71m.us/button.svg)](http://installer.71m.us/install?url=https://github.com/virtkick/virtkick-starter.git)
 
 VirtKick is a simple, open source orchestrator.
 Managing virtual machines or Docker containers has never been easier.
