@@ -9,6 +9,12 @@ Managing virtual machines or Docker containers has never been easier.
 
 That's the VirtKick Starter. It will allow you to start using VirtKick with a single click.
 
+<p align="center">
+  <a href="https://www.indiegogo.com/projects/virtkick-take-cloud-back">
+    <img src="https://raw.github.com/virtkick/virtkick/master/indiegogo.png" />
+  </a>
+</p>
+
 This is a heavy work in progress and not yet one-click install. Don't judge - it will be improved! Please [report an issue](https://github.com/virtkick/virtkick) if you face any problems. We need your help to make it bullet-proof. Thanks! :-)
 
 ## Distro specific prerequisites
