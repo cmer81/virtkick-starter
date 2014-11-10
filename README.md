@@ -47,6 +47,21 @@ Next runs:
 ./virtkick-start -dim
 ```
 
+### CentOS 7
+
+First of all you need git
+
+    sudo yum install git
+    git clone https://github.com/virtkick/virtkick-starter.git
+    cd virtkick-starter
+    sudo ./setup/distro/centos7.sh
+    ./virtkick-start -dim
+
+Next runs:
+
+    ./virtkick-start -dim
+
+
 ### Other
 
 Over time we plan to add streamlined installation for other distros as well. General rule of thumb is to have a development environment (make, g++), libvirt and qemu. `virtkick-starter` will try to setup rest by itself.
