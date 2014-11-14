@@ -28,7 +28,7 @@ Host localhost
 
   sudo bash -c '
   if ! [ -e /var/run/libvirt/libvirt-sock ];then
-    echo "Cannot find /var/run/libvirt/libvirt-sock, please install libvirt" && exit 1
+    echo "Cannot find /var/run/libvirt/libvirt-sock, please install libvirt and enable libvirtd" && exit 1
   fi;
   export LIBVIRT_GROUP=$(stat -c "%G" /var/run/libvirt/libvirt-sock)
   if [ "$LIBVIRT_GROUP" != \"root\" ];then
@@ -40,6 +40,7 @@ Host localhost
   if ! getent passwd virtkick > /dev/null; then 
     useradd virtkick -m -c "VirtKick orchestrator" -g kvm $ADD_LIBVIRT
   fi && 
+  echo "virtkick:*" | chpasswd -e &&
   mkdir -p ~virtkick/{.ssh,hdd,iso} &&
   chown -R virtkick:kvm ~virtkick &&
   chmod 750 ~virtkick &&
