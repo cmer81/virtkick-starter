@@ -263,7 +263,7 @@ function downloadIsos() {
     }
 
     console.log('[aria2c:' +iso.long_name+'] Starting download of iso: '+ iso.file);
-    var aria2c = spawn("./", "ssh -p " + (process.env.SSH_PORT || 22) +  " -o \"StrictHostKeyChecking no\" virtkick@localhost aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "\"" + url + "\"";}).join(" "));
+    var aria2c = spawn("./", "ssh -t -t -p " + (process.env.SSH_PORT || 22) +  " -o \"StrictHostKeyChecking no\" virtkick@localhost aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "\"" + url + "\"";}).join(" "));
     bindOutput(aria2c, 'aria2c:' +iso.long_name, cb);
 
   }, function(err) {
