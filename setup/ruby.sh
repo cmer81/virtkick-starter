@@ -15,19 +15,19 @@ export rvm_user_install_flag=1
 export rvm_path="$RVM_DIR"
 unset GEM_HOME # unset any previous ruby setup
 if ! [ -e "$RVM_DIR" ];then
-	mkdir -p "$RVM_DIR"
+  mkdir -p "$RVM_DIR"
 
-	curl -sSL https://get.rvm.io | bash -s -- --ignore-dotfiles #--autolibs=rvm_pkg
-	. .rvm/scripts/rvm
+  curl -sSL https://get.rvm.io | bash -s -- --ignore-dotfiles #--autolibs=rvm_pkg
+. .rvm/scripts/rvm
 #  export PATH="$RVM_DIR/bin:$PATH"
 
-	rvm install $VIRTKICK_RUBY_VERSION
-	rvm use $VIRTKICK_RUBY_VERSION
-	rvm alias create default $VIRTKICK_RUBY_VERSION
+  rvm install $VIRTKICK_RUBY_VERSION
+  rvm use $VIRTKICK_RUBY_VERSION
+  rvm alias create default $VIRTKICK_RUBY_VERSION
   echo $VIRTKICK_RUBY_VERSION > "$RVM_DIR/installed"
   bundle config build.nokogiri --use-system-libraries
 else
-	. .rvm/scripts/rvm
+  . .rvm/scripts/rvm
   rvm use $VIRTKICK_RUBY_VERSION
   bundle config build.nokogiri --use-system-libraries
 fi

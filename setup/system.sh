@@ -14,7 +14,7 @@ Host localhost
   sudo bash -c '
     if which apt-get &> /dev/null;then
       echo "Detected apt-get based system, trying to auto install required packages"
-      (apt-get --fix-missing -y install git curl openssh-server qemu-kvm libvirt-bin python-pip python-libvirt python-libxml2 libxml2-dev libxslt-dev)
+      (apt-get --fix-missing -y install git curl openssh-server qemu-kvm libvirt-bin python-pip python-libvirt python-libxml2 libxml2-dev libxslt-dev aria2)
       sleep 1 # give some time for virtkick to start
     fi
   '
@@ -48,6 +48,7 @@ Host localhost
     echo 'virtkick user needs rights to read/write /var/run/libvirt/libvirt-sock'
     exit 1
 	fi
+  which aria2c > /dev/null
   touch .system-setup
 else
   export SSH_PORT="$(cat .ssh-port 2> /dev/null || echo 22)"

@@ -135,8 +135,8 @@ console.log("backend location:", backendDir);
 
 
 function bindOutput(proc, label, exitCb) {
-  proc.stdout.pipe(split()).on('data', function(line) { process.stdout.write('['+label+'] ' + line + '\n') });
-  proc.stderr.pipe(split()).on('data', function(line) { process.stderr.write('['+label+'] ' + line + '\n') });
+  proc.stdout.pipe(split()).on('data', function(line) { if(line.length) process.stdout.write('['+label+'] ' + line + '\n') });
+  proc.stderr.pipe(split()).on('data', function(line) { if(line.length) process.stderr.write('['+label+'] ' + line + '\n') });
   proc.on('error', forceExit);
   if(exitCb) {
     proc.on('exit', function(code) {
@@ -262,10 +262,9 @@ function downloadIsos() {
       return cb();
     }
 
-    console.log('[wget:' +iso.id+'] Starting download of iso: '+ iso.file);
-    var wget = spawn("./", "ssh -p " + (process.env.SSH_PORT || 22) +  " -o \"StrictHostKeyChecking no\" virtkick@localhost wget -q -c -P iso \"" + iso.mirrors[0] + "\"");
-//    var wget = spawn("./", "ssh virtkick@localhost curl -s -C - -o \"" + iso.file + "\" \"" + iso.mirrors[0] + "\"")
-    bindOutput(wget, '[wget:' +iso.id+']', cb);
+    console.log('[aria2c:' +iso.long_name+'] Starting download of iso: '+ iso.file);
+    var aria2c = spawn("./", "ssh -p " + (process.env.SSH_PORT || 22) +  " -o \"StrictHostKeyChecking no\" virtkick@localhost aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "\"" + url + "\"";}).join(" "));
+    bindOutput(aria2c, 'aria2c:' +iso.long_name, cb);
 
   }, function(err) {
     if(err) {
