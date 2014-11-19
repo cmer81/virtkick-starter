@@ -20,6 +20,8 @@ This is a heavy work in progress and not yet one-click install. Don't judge - it
 
 ## Distro specific prerequisites
 
+Run all commands as a regular user. Don't run as root, unless otherwise stated. 
+
 ### Ubuntu 14.04
 
 Most things are already handled by `virtkick-start`, you only need Git.
