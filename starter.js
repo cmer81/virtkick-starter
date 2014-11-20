@@ -92,7 +92,6 @@ function checkScript(cb) {
 
 }
 
-
 function spawn(cwd, command, options) {
   chSpawn = child_process.spawn;
 
@@ -161,7 +160,6 @@ var backendDir = env.BACKEND_DIR || path.join(BASE_DIR, 'backend');
 console.log("RAILS_ENV=" + env.RAILS_ENV);
 console.log("webapp location:", webappDir);
 console.log("backend location:", backendDir);
-
 
 function bindOutput(proc, label, exitCb) {
   proc.stdout.pipe(split()).on('data', function(line) { if(line.length) process.stdout.write('['+label+'] ' + line + '\n') });
@@ -292,7 +290,7 @@ function downloadIsos() {
     }
 
     console.log('[aria2c:' +iso.long_name+'] Starting download of iso: '+ iso.file);
-    var aria2c = spawnAsVirtkick("aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "\"" + url + "\"";}).join(" "));
+    var aria2c = spawnAsVirtkick("aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "\\\"" + url + "\\\"";}).join(" "));
     bindOutput(aria2c, 'aria2c:' +iso.long_name, function(code) {
       if(code) return cb(code);
 
