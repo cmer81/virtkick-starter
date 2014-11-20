@@ -55,6 +55,19 @@ env.ISO_DIR = env.ISO_DIR || path.join(BASE_DIR, 'iso');
 
 var workingScriptCommand = false;
 
+function sha512(file, cb) {
+  var stream = fs.createReadStream(file);
+  var algo = 'sha512';
+  var shasum = crypto.createHash(algo);
+  stream.on('data', function(data) {
+    shasum.update(data);
+  });
+  stream.on('error', cb);
+  stream.on('end', function() {
+    cb(null, shasum.digest('hash'))
+  });
+}
+
 function checkScript(cb) {
   var output = child_process.spawn('script', ['--help']);
   var allData = "";
@@ -113,6 +126,22 @@ function spawn(cwd, command, options) {
     });
   });
   return proc;
+}
+
+function spawnAsVirtkick(cmd) {
+  return spawn("./", "ssh -t -t -p " + (process.env.SSH_PORT || 22) +  " -o \"StrictHostKeyChecking no\" virtkick@localhost " + cmd);
+}
+
+function runAsVirtkick(cmd, cb) {
+  var proc = spawnAsVirtkick(cmd);
+  var output = "";
+  proc.stdout.on('data', function(data) {
+    output += data.toString('utf8');
+  });
+  proc.on('exit', function(code) {
+    cb(code, output);
+  });
+
 }
 
 function forceExit() {
@@ -263,12 +292,27 @@ function downloadIsos() {
     }
 
     console.log('[aria2c:' +iso.long_name+'] Starting download of iso: '+ iso.file);
-    var aria2c = spawn("./", "ssh -t -t -p " + (process.env.SSH_PORT || 22) +  " -o \"StrictHostKeyChecking no\" virtkick@localhost aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "\"" + url + "\"";}).join(" "));
-    bindOutput(aria2c, 'aria2c:' +iso.long_name, cb);
+    var aria2c = spawnAsVirtkick("aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "\"" + url + "\"";}).join(" "));
+    bindOutput(aria2c, 'aria2c:' +iso.long_name, function(code) {
+      if(code) return cb(code);
+
+      if(iso.sha512) {
+        runAsVirtkick('sha512sum "iso/' + iso.file + '"', function(code, output) {
+          var m = output.match(/^([0-9a-f]+)/);
+          if(m && m[1] === iso.sha512) {
+            return cb(code);
+          }
+          cb(code || new Error('sha512 does not match: expecting("'+iso.sha512+'") got("'+m[1]+'")'));
+        });
+      } else {
+        return cb(code);
+      }
+
+    });
 
   }, function(err) {
     if(err) {
-      console.error("Not all isos could have been downloaded, will retry on next start");
+      console.error("Not all isos could have been downloaded, will retry on next start", err);
       return;
     }
     console.log("All isos downloaded");
