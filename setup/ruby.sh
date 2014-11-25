@@ -18,7 +18,7 @@ if ! [ -e "$RVM_DIR" ];then
   mkdir -p "$RVM_DIR"
 
   curl -sSL https://get.rvm.io | bash -s -- --ignore-dotfiles #--autolibs=rvm_pkg
-. .rvm/scripts/rvm
+  . .rvm/scripts/rvm
 #  export PATH="$RVM_DIR/bin:$PATH"
 
   rvm install $VIRTKICK_RUBY_VERSION

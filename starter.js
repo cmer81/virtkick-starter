@@ -137,6 +137,9 @@ function runAsVirtkick(cmd, cb) {
   proc.stdout.on('data', function(data) {
     output += data.toString('utf8');
   });
+  proc.stderr.on('data', function(data) {
+    output += data.toString('utf8');
+  });
   proc.on('exit', function(code) {
     cb(code, output);
   });
@@ -290,7 +293,7 @@ function downloadIsos() {
     }
 
     console.log('[aria2c:' +iso.long_name+'] Starting download of iso: '+ iso.file);
-    var aria2c = spawnAsVirtkick("aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "\\\"" + url + "\\\"";}).join(" "));
+    var aria2c = spawnAsVirtkick("aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "'" + url + "'";}).join(" "));
     bindOutput(aria2c, 'aria2c:' +iso.long_name, function(code) {
       if(code) return cb(code);
 
@@ -300,7 +303,7 @@ function downloadIsos() {
           if(m && m[1] === iso.sha512) {
             return cb(code);
           }
-          cb(code || new Error('sha512 does not match: expecting("'+iso.sha512+'") got("'+m[1]+'")'));
+          cb(code || new Error('sha512 of "iso/'+iso.file+'" does not match: expecting("'+iso.sha512+'") got("'+(m?(m[1]):null)+'") - output: ' + output));
         });
       } else {
         return cb(code);
