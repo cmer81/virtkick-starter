@@ -1,6 +1,6 @@
 #!/bin/bash
 rpm -Uvh http://mirror-fpt-telecom.fpt.net/fedora/epel/6/i386/epel-release-6-8.noarch.rpm
-rpm -Uvh http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.i68
+rpm -Uvh http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.i686.rpm
 yum install -y git libvirt libvirt-python man python-pip sqlite-devel libxml2-python libxml2-devel libxslt-devel aria2
 
 /etc/init.d/libvirtd start
