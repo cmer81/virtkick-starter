@@ -1,8 +1,7 @@
 #!/bin/bash
-yum -y install wget
-wget http://mirror-fpt-telecom.fpt.net/fedora/epel/6/i386/epel-release-6-8.noarch.rpm
-rpm -ivh epel-release-6-8.noarch.rpm
-yum install -y git libvirt libvirt-python wget man python-pip sqlite-devel libxml2-python libxml2-devel libxslt-devel aria2
+rpm -Uvh http://mirror-fpt-telecom.fpt.net/fedora/epel/6/i386/epel-release-6-8.noarch.rpm
+rpm -Uvh http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.i68
+yum install -y git libvirt libvirt-python man python-pip sqlite-devel libxml2-python libxml2-devel libxslt-devel aria2
 
 /etc/init.d/libvirtd start
 /etc/init.d/messagebus start
