@@ -217,10 +217,6 @@ if(argv.i) {
   tasks1.push(function(cb) {
     async.series([
       function(cb) {
-        var proc = spawn(backendDir, 'pip install --user -r requirements.txt');
-        bindOutput(proc, 'backend:install', cb);
-      },
-      function(cb) {
         var proc = spawn(backendDir, 'python2 ./manage.py syncdb --noinput');
         bindOutput(proc, 'backend:syncdb', cb);
       },
@@ -295,7 +291,9 @@ function downloadIsos() {
     console.log('[aria2c:' +iso.long_name+'] Starting download of iso: '+ iso.file);
     var aria2c = spawnAsVirtkick("aria2c -V --seed-time=0 --save-session-interval=5 --allow-overwrite=true --follow-metalink=mem -q -c -d iso " + iso.mirrors.map(function(url) {return "'" + url + "'";}).join(" "));
     bindOutput(aria2c, 'aria2c:' +iso.long_name, function(code) {
-      if(code) return cb(code);
+      if(code) { 
+        return cb(code);
+      }
 
       if(iso.sha512) {
         runAsVirtkick('sha512sum "iso/' + iso.file + '"', function(code, output) {
@@ -313,7 +311,7 @@ function downloadIsos() {
 
   }, function(err) {
     if(err) {
-      console.error("Not all isos could have been downloaded, will retry on next start", err);
+      console.log("Not all isos could have been downloaded, will retry on next start", err);
       return;
     }
     console.log("All isos downloaded");
