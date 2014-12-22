@@ -1,14 +1,6 @@
 name: virtkick
-image: ubuntu-14-04-x64
-min_size: 4gb
+min_size: 2gb
 config:
   #cloud-config
-  users:
-    - name: admin
-      groups: sudo
-      shell: /bin/bash
-      sudo: ['ALL=(ALL) NOPASSWD:ALL']
-  packages:
-    - git
   runcmd:
-    - cd /home/admin/ && sudo -u admin -s -- sh -c 'git clone https://github.com/virtkick/virtkick-starter.git && cd virtkick-starter && ./virtkick-start -dim'
+    - yum install https://github.com/virtkick/virtkick-package/releases/download/0.4.alpha/virtkick-0.4.alpha-1_x86_64.rpm
