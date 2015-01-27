@@ -4,4 +4,4 @@ min_size: 2gb
 config:
   #cloud-config
   runcmd:
-    - yum -y install https://github.com/virtkick/virtkick-package/releases/download/0.4.alpha/virtkick-0.4.alpha-1_x86_64.rpm
+    - yum -y install https://download.virtkick.io/latest.rpm
