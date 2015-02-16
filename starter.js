@@ -7,6 +7,8 @@ var yargs = require('yargs');
 var async = require('async');
 var extend = require('extend');
 
+psTree = require('ps-tree')
+
 process.setMaxListeners(100);
 
 var argv = yargs
@@ -89,13 +91,10 @@ function checkScript(cb) {
   output.once('error', function() {
     cb();
   });
-
 }
 
 function spawn(cwd, command, options) {
   chSpawn = child_process.spawn;
-
-  command = command.replace('./bin/spring ', '');
 
   var proc;
 
@@ -103,25 +102,39 @@ function spawn(cwd, command, options) {
     proc =
       chSpawn('script', ['/dev/null', '-e', '-q', '-c', command], extend({}, {
       env: env,
-      cwd: cwd
+      cwd: cwd,
+      detached: true
     }, options));
   } else {
     proc = chSpawn('bash', ['-c', command], extend({}, {
       env: env,
-      cwd: cwd
+      cwd: cwd,
+      detached: true
     }, options));
   }
+
+  var exitCounter = 0;
   var exitHandler = function() {
-    proc.kill('SIGKILL');
+    exitCounter++;
+    psTree(proc.pid, function(err, children) {
+      var killer = chSpawn('kill', ['-9'].concat(children.map(function(p) {
+        return p.PID;
+      })));
+      killer.on('exit', function() {
+        exitCounter--;
+        if(exitCounter == 0) {
+          process.exit();
+        }
+      });
+    });
   };
   proc.once('exit', function() {
     process.removeListener('exit', exitHandler);
   });
-  process.on('exit', exitHandler);
+  process.once('exit', exitHandler);
   ['SIGINT', 'SIGTERM', 'SIGHUP'].forEach(function(signal) {
     process.once(signal, function() {
       exitHandler();
-      process.exit();
     });
   });
   return proc;
@@ -166,7 +179,7 @@ console.log("backend location:", backendDir);
 
 function bindOutput(proc, label, exitCb) {
   proc.stdout.pipe(split()).on('data', function(line) { if(line.length) process.stdout.write('['+label+'] ' + line + '\n') });
-  proc.stderr.pipe(split()).on('data', function(line) { if(line.length) process.stderr.write('['+label+'] ' + line + '\n') });
+  proc.stderr.pipe(split()).on('data', function(line) { if(line.length) process.stderr.write(line + '\n') });
   proc.on('error', forceExit);
   if(exitCb) {
     proc.on('exit', function(code) {
@@ -177,20 +190,21 @@ function bindOutput(proc, label, exitCb) {
 }
 
 function runEverything() {
+  var rails = spawn(webappDir, 'nodemon -e rb -i \'*_job.rb\'  -d 0 -q --exec "bundle exec puma -C config/puma.rb -p ' + env.RAILS_PORT + '"');
+  console.log("RAILS PID", rails.pid);
 
-  var rails = spawn(webappDir, 'bundle exec ./bin/spring rails s -p ' + env.RAILS_PORT);
 
   bindOutput(rails, 'rails', forceExit);
 
   var workerN = 0;
   function createWorker() {
-    var worker = spawn(webappDir, 'bundle exec ./bin/spring rake jobs:work');
+    var worker = spawn(webappDir, 'nodemon -e rb -q -d 0 --exec "bundle exec rake jobs:work"');
     bindOutput(worker, 'work' + workerN, forceExit);
     workerN += 1;
     return worker;
   }
 
-  var workerCount = env.WORKER_COUNT || 2;
+  var workerCount = env.WORKER_COUNT || 1;
   workerCount = Math.min(require('os').cpus().length, Math.max(workerCount, 1));
 
   for(var i = 0;i < workerCount;++i) {
@@ -198,7 +212,7 @@ function runEverything() {
   }
 
 
-  var backend = spawn(backendDir, 'python2 manage.py runserver');
+  var backend = spawn(backendDir, 'python2 ./manage.py runserver');
   bindOutput(backend, 'virtm', forceExit);
 }
 
@@ -238,14 +252,14 @@ if(argv.i) {
 
 if(argv.m) {
   tasks2.push(function(cb) {
-    var proc = spawn(webappDir, 'bundle exec ./bin/spring rake db:migrate');
+    var proc = spawn(webappDir, 'bundle exec rake db:migrate');
     bindOutput(proc, 'proc', cb);
   });
 }
 
 if(argv.c) {
   tasks2.push(function(cb) {
-    var proc = spawn(webappDir, 'bundle exec ./bin/spring rake assets:clean');
+    var proc = spawn(webappDir, 'bundle exec rake assets:clean');
     bindOutput(proc, 'assets:clean', cb);
   });
 }
@@ -253,7 +267,7 @@ if(argv.c) {
 
 if(argv.a) {
   tasks2.push(function(cb) {
-    var proc = spawn(webappDir, 'bundle exec ./bin/spring rake assets:precompile');
+    var proc = spawn(webappDir, 'bundle exec rake assets:precompile');
     bindOutput(proc, 'assets', cb);
   });
 }
