@@ -190,17 +190,25 @@ function bindOutput(proc, label, exitCb) {
 }
 
 function runEverything() {
-  var rails = spawn(webappDir, 'nodemon -e rb -i \'*_job.rb\'  -d 0 -q --exec "bundle exec puma -C config/puma.rb -p ' + env.RAILS_PORT + '"');
-  console.log("RAILS PID", rails.pid);
+  function spawnRails() {
+    var rails = spawn(webappDir, 'nodemon --exitcrash -e rb -i \'*_job.rb\' -d 0 -q --exec "bundle exec puma -C config/puma.rb -p ' + env.RAILS_PORT + '"');
+    console.log("RAILS PID", rails.pid);
+    bindOutput(rails, 'rails', function() {
+      console.log('Process exitted, restarting');
+      spawnRails();
+    });
+    return rails;
+  }
+  spawnRails();
 
 
-  bindOutput(rails, 'rails', forceExit);
 
-  var workerN = 0;
-  function createWorker() {
-    var worker = spawn(webappDir, 'nodemon -e rb -q -d 0 --exec "bundle exec rake jobs:work"');
-    bindOutput(worker, 'work' + workerN, forceExit);
-    workerN += 1;
+  function createWorker(workerN) {
+    var worker = spawn(webappDir, 'nodemon --exitcrash -e rb -q -d 0 --exec "bundle exec rake jobs:work"');
+    bindOutput(worker, 'work' + workerN, function() {
+      console.log('Process exitted, restarting');
+      createWorker(workerN);
+    });
     return worker;
   }
 
@@ -208,7 +216,7 @@ function runEverything() {
   workerCount = Math.min(require('os').cpus().length, Math.max(workerCount, 1));
 
   for(var i = 0;i < workerCount;++i) {
-    createWorker();
+    createWorker(i+1);
   }
 
 
