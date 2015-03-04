@@ -220,7 +220,7 @@ function runEverything() {
   }
 
 
-  var backend = spawn(backendDir, 'python2 ./manage.py runserver');
+  var backend = spawn(backendDir, 'nodemon --exitcrash -e py -d 0 -q --exec "python2 ./manage.py runserver"');
   bindOutput(backend, 'virtm', forceExit);
 }
 
