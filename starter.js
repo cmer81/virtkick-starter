@@ -232,7 +232,7 @@ var serialTasks = [[checkScript], tasks1, tasks2];
 
 if(argv.i) {
   tasks1.push(function(cb) {
-    var proc = spawn(webappDir, 'bundle install');
+    var proc = spawn(webappDir, 'bundle install --jobs 8');
     bindOutput(proc, 'install', cb);
   });
 
