@@ -22,6 +22,8 @@ var argv = yargs
 .describe('a', 'prepare assets before running (goes with production run)')
 .alias('p', 'production')
 .describe('p', 'run in production mode (add also -d to have production debug)')
+.alias('r', 'livereload')
+.describe('r', 'run development mode with livereload system')
 .argv;
 
 if(argv.h) {
@@ -123,7 +125,9 @@ function spawn(cwd, command, options) {
       killer.on('exit', function() {
         exitCounter--;
         if(exitCounter == 0) {
-          process.exit();
+          setTimeout(function() {
+            process.exit();
+          }, 50);
         }
       });
     });
@@ -178,7 +182,36 @@ console.log("webapp location:", webappDir);
 console.log("backend location:", backendDir);
 
 function bindOutput(proc, label, exitCb) {
-  proc.stdout.pipe(split()).on('data', function(line) { if(line.length) process.stdout.write('['+label+'] ' + line + '\n') });
+  var noLabels = false;
+  var lines = [];
+  proc.stdout.pipe(split()).on('data', function(line) {
+    if(line == '^^== BEGIN EXCEPTION') {
+      console.log('['+label+'] Unhandled exception ');
+      noLabels = true;
+      lines = [];
+      return;
+    } else if(line == '__== END EXCEPTION') {
+      noLabels = false;
+
+      try {
+        var xclip = child_process.execFile('xclip', ['-selection', 'c']);
+        xclip.stdin.write(lines.join('\n') + '\n');
+        xclip.stdin.end();
+        xclip.on('error', function(err) {
+          console.error('xclip failed, unable to copy exception to clipboard');
+        });
+      } catch(err) {
+
+      }
+      return;
+    } else if(noLabels) {
+      lines.push(line);
+    }
+
+
+    if(line.length)
+      process.stdout.write( (noLabels ? '' : '['+label+'] ') + line + '\n')
+  });
   proc.stderr.pipe(split()).on('data', function(line) { if(line.length) process.stderr.write(line + '\n') });
   proc.on('error', forceExit);
   if(exitCb) {
@@ -190,6 +223,10 @@ function bindOutput(proc, label, exitCb) {
 }
 
 function runEverything() {
+  if(argv.r) {
+    process.env.LIVERELOAD = 1;
+  }
+
   function spawnRails() {
     var rails = spawn(webappDir, 'nodemon --exitcrash -e rb -i \'*_job.rb\' -d 0 -q --exec "bundle exec puma -C config/puma.rb -p ' + env.RAILS_PORT + '"');
     console.log("RAILS PID", rails.pid);
@@ -219,9 +256,15 @@ function runEverything() {
     createWorker(i+1);
   }
 
-
   var backend = spawn(backendDir, 'nodemon --exitcrash -e py -d 0 -q --exec "python2 ./manage.py runserver"');
   bindOutput(backend, 'virtm', forceExit);
+
+  if(argv.r) {
+    var guard = spawn(webappDir, 'guard -P livereload');
+    bindOutput(guard, 'guard', function() {
+      console.log('Guard exited');
+    });
+  }
 }
 
 var tasks1 = [];
@@ -232,7 +275,7 @@ var serialTasks = [[checkScript], tasks1, tasks2];
 
 if(argv.i) {
   tasks1.push(function(cb) {
-    var proc = spawn(webappDir, 'bundle install --jobs 8');
+    var proc = spawn(webappDir, '(bundle check || bundle install --jobs 8)');
     bindOutput(proc, 'install', cb);
   });
 

@@ -21,7 +21,7 @@ if ! [ -e "$RVM_DIR" ];then
   . .rvm/scripts/rvm
 #  export PATH="$RVM_DIR/bin:$PATH"
 
-  rvm install $VIRTKICK_RUBY_VERSION
+  rvm install $VIRTKICK_RUBY_VERSION -j 8
   rvm use $VIRTKICK_RUBY_VERSION
   rvm alias create default $VIRTKICK_RUBY_VERSION
   echo $VIRTKICK_RUBY_VERSION > "$RVM_DIR/installed"
