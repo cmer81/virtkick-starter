@@ -1,5 +1,5 @@
 #!/bin/bash
-yum install -y http://download.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-2.noarch.rpm
+yum install -y http://download.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
 yum install -y @development qemu qemu-kvm libvirt libvirt-python wget man python-pip sqlite-devel libxml2-python libxml2-devel libxslt-devel
 systemctl enable libvirtd
 systemctl start libvirtd
