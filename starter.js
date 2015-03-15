@@ -2,7 +2,8 @@
 
 var path = require('path');
 var mkdirp = require('mkdirp');
-
+var yaml = require('js-yaml');
+var fs = require('fs');
 var yargs = require('yargs');
 var async = require('async');
 var extend = require('extend');
@@ -141,6 +142,13 @@ function spawn(cwd, command, options) {
       exitHandler();
     });
   });
+  proc.restart = function() {
+    psTree(proc.pid, function(err, children) {
+      var killer = chSpawn('kill', ['-9'].concat(children.map(function(p) {
+        return p.PID;
+      })));
+    });
+  };
   return proc;
 }
 
@@ -170,7 +178,7 @@ function forceExit() {
 require('virtkick-proxy');
 
 var child_process = require('child_process');
-
+var watch = require('node-watch');
 var split = require('split');
 
 var webappDir = env.WEBAPP_DIR || path.join(BASE_DIR, 'webapp');
@@ -222,29 +230,37 @@ function bindOutput(proc, label, exitCb) {
   }
 }
 
+var filter = function(pattern, fn) {
+  return function(filename) {
+    if (pattern.test(filename)) {
+      fn(filename);
+    }
+  }
+}
+
 function runEverything() {
   if(argv.r) {
     process.env.LIVERELOAD = 1;
   }
 
+  var railsProcess;
+  var workerProcess = [];
   function spawnRails() {
-    var rails = spawn(webappDir, 'nodemon --exitcrash -e rb -i \'*_job.rb\' -d 0 -q --exec "bundle exec puma -C config/puma.rb -p ' + env.RAILS_PORT + '"');
+    var rails = spawn(webappDir, 'bundle exec puma -C config/puma.rb -p ' + env.RAILS_PORT + '');
     console.log("RAILS PID", rails.pid);
     bindOutput(rails, 'rails', function() {
       console.log('Process exitted, restarting');
-      spawnRails();
+      railsProcess = spawnRails();
     });
     return rails;
   }
-  spawnRails();
-
-
+  railsProcess = spawnRails();
 
   function createWorker(workerN) {
-    var worker = spawn(webappDir, 'nodemon --exitcrash -e rb -q -d 0 --exec "bundle exec rake jobs:work"');
+    var worker = spawn(webappDir, 'bundle exec rake jobs:work');
     bindOutput(worker, 'work' + workerN, function() {
       console.log('Process exitted, restarting');
-      createWorker(workerN);
+      workerProcess[workerN-1] = createWorker(workerN);
     });
     return worker;
   }
@@ -253,24 +269,45 @@ function runEverything() {
   workerCount = Math.min(require('os').cpus().length, Math.max(workerCount, 1));
 
   for(var i = 0;i < workerCount;++i) {
-    createWorker(i+1);
+    workerProcess[i] = createWorker(i+1);
   }
 
-  var backend = spawn(backendDir, 'nodemon --exitcrash -e py -d 0 -q --exec "python2 ./manage.py runserver"');
-  bindOutput(backend, 'virtm', forceExit);
+  watch(webappDir, filter(/\.rb$/, function(f) {
+    railsProcess.restart();
+    for(var i = 0;i < workerCount;++i) {
+      workerProcess[i].restart();
+    }
+  }));
 
+  var backend;
+  function spawnBackend() {
+    backend = spawn(backendDir, 'python2 ./manage.py runserver');
+    bindOutput(backend, 'virtm', function() {
+      backend = spawnBackend();
+    });
+    return backend;
+  }
+
+  backend = spawnBackend();
+  watch(backendDir, filter(/\.py$/, function(f) {
+    backend.restart();
+  }));
+
+  
   if(argv.r) {
     var guard = spawn(webappDir, 'guard -P livereload');
     bindOutput(guard, 'guard', function() {
       console.log('Guard exited');
     });
   }
+
 }
 
 var tasks1 = [];
 var tasks2 = [];
+var tasks3 = [];
 
-var serialTasks = [[checkScript], tasks1, tasks2];
+var serialTasks = [[checkScript], tasks1, tasks2, tasks3];
 
 
 if(argv.i) {
@@ -309,7 +346,7 @@ if(argv.m) {
 }
 
 if(argv.c) {
-  tasks2.push(function(cb) {
+  tasks3.push(function(cb) {
     var proc = spawn(webappDir, 'bundle exec rake assets:clean');
     bindOutput(proc, 'assets:clean', cb);
   });
@@ -317,14 +354,11 @@ if(argv.c) {
 
 
 if(argv.a) {
-  tasks2.push(function(cb) {
+  tasks3.push(function(cb) {
     var proc = spawn(webappDir, 'bundle exec rake assets:precompile');
     bindOutput(proc, 'assets', cb);
   });
 }
-
-var yaml = require('js-yaml');
-var fs = require('fs');
 
 async.eachSeries(serialTasks, function(tasks, cb) {
   async.parallel(tasks, cb);

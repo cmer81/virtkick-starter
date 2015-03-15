@@ -11,7 +11,6 @@ if ! [ -e "$NVM_DIR" ];then
   (mkdir -p $NVM_DIR && cd .nvm && wget --quiet https://raw.githubusercontent.com/creationix/nvm/master/nvm.sh)
 	. .nvm/nvm.sh
   nvm install 0.10.32
-  npm install -g nodemon
   touch "$NVM_DIR/installed"
 fi
 . .nvm/nvm.sh

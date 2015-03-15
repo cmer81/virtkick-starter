@@ -22,6 +22,7 @@
     "js-yaml": "^3.2.2",
     "mkdirp": "^0.5.0",
     "ng-annotate": "^0.10.2",
+    "node-watch": "^0.3.4",
     "ps-tree": "0.0.3",
     "split": "^0.3.0",
     "virtkick-proxy": "git://github.com/virtkick/virtkick-proxy.git",
