@@ -272,7 +272,7 @@ function runEverything() {
     workerProcess[i] = createWorker(i+1);
   }
 
-  watch(webappDir, filter(/\.rb$/, function(f) {
+  watch(webappDir, {followSymLinks: true}, filter(/\.rb$/, function(f) {
     railsProcess.restart();
     for(var i = 0;i < workerCount;++i) {
       workerProcess[i].restart();
