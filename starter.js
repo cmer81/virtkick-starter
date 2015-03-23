@@ -128,7 +128,7 @@ function spawn(cwd, command, options) {
         if(exitCounter == 0) {
           setTimeout(function() {
             process.exit();
-          }, 50);
+          }, 500);
         }
       });
     });
