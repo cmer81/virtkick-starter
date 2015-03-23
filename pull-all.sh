@@ -1,3 +1,4 @@
+#!/bin/bash
 git pull
 pushd backend > /dev/null
 git pull
