@@ -10,6 +10,8 @@ var extend = require('extend');
 
 psTree = require('ps-tree')
 
+var exittingApp = false;
+
 process.setMaxListeners(100);
 
 var argv = yargs
@@ -118,6 +120,7 @@ function spawn(cwd, command, options) {
 
   var exitCounter = 0;
   var exitHandler = function() {
+    exittingApp = true;
     exitCounter++;
     psTree(proc.pid, function(err, children) {
       var killer = chSpawn('kill', ['-9'].concat(children.map(function(p) {
@@ -126,9 +129,8 @@ function spawn(cwd, command, options) {
       killer.on('exit', function() {
         exitCounter--;
         if(exitCounter == 0) {
-          setTimeout(function() {
-            process.exit();
-          }, 500);
+          process.emit('removeExitHandlers');
+          process.exit();
         }
       });
     });
@@ -221,11 +223,18 @@ function bindOutput(proc, label, exitCb) {
       process.stdout.write( (noLabels ? '' : '['+label+'] ') + line + '\n')
   });
   proc.stderr.pipe(split()).on('data', function(line) { if(line.length) process.stderr.write(line + '\n') });
-  proc.on('error', forceExit);
+  proc.once('error', forceExit);
+  function exitHandler(code) {
+    console.log("Process", label, "exit:", code);
+    if(exittingApp)
+      return;
+    exitCb(code);
+  }
+
   if(exitCb) {
-    proc.on('exit', function(code) {
-      console.log("Process", label, "exit:", code);
-      exitCb(code);
+    proc.once('exit', exitHandler);
+    process.once('removeExitHandlers', function() {
+      proc.removeListener('exit', exitHandler);
     });
   }
 }
@@ -420,5 +429,3 @@ function downloadIsos() {
 
 
 }
-
-
