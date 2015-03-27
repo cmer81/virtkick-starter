@@ -352,6 +352,10 @@ if(argv.m) {
     var proc = spawn(webappDir, 'bundle exec rake db:migrate');
     bindOutput(proc, 'proc', cb);
   });
+  tasks2.push(function(cb) {
+    var proc = spawn(webappDir, 'bundle exec rake db:migrate RAILS_ENV=test');
+    bindOutput(proc, 'proc', cb);
+  });
 }
 
 if(argv.c) {
