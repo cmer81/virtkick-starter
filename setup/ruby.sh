@@ -17,12 +17,13 @@ unset GEM_HOME # unset any previous ruby setup
 if ! [ -e "$RVM_DIR" ];then
   mkdir -p "$RVM_DIR"
 
-  curl -sSL https://get.rvm.io | bash -s -- --ignore-dotfiles #--autolibs=rvm_pkg
+  curl -sSL https://get.rvm.io | bash -s stable --ignore-dotfiles #--autolibs=rvm_pkg
   . .rvm/scripts/rvm
 #  export PATH="$RVM_DIR/bin:$PATH"
 
   rvm install $VIRTKICK_RUBY_VERSION -j 8
   rvm use $VIRTKICK_RUBY_VERSION
+  gem install bundler
   rvm alias create default $VIRTKICK_RUBY_VERSION
   echo $VIRTKICK_RUBY_VERSION > "$RVM_DIR/installed"
   bundle config build.nokogiri --use-system-libraries
